@@ -37,8 +37,6 @@ def get_equation_values(max_value, max_result=20, multiplicate=False):
     a = None
     b = None
     while a is None or (a + b > max_result if multiplicate is False else a * b > max_result):
-        print('generate')
-        print(a, b)
         a = get_rand(max_value)
         b = get_rand(max_value)
 
