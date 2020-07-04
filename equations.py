@@ -16,6 +16,7 @@ max_result_subtraction = 22
 
 total_questions = 0
 total_points = 0
+history = []
 characters = {
     'beavis': cowsay.beavis, 'cheese': cowsay.cheese, 'daemon': cowsay.daemon,
     'cow': cowsay.cow, 'dragon': cowsay.dragon, 'ghostbusters': cowsay.ghostbusters,
@@ -25,20 +26,22 @@ characters = {
 }
 
 
-def get_rand(max=10):
+def get_rand(max=10, _min=1):
     """ Return random int """
 
-    return random.randint(1, max)
+    return random.randint(_min, max)
 
 
-def get_equation_values(max_value, max_result=20, multiplicate=False):
+def get_equation_values(max_value, max_result=20, operator='+', _min=1):
     """ Returns a set of numbers to be used for an equation """
 
     a = None
     b = None
-    while a is None or (a + b > max_result if multiplicate is False else a * b > max_result):
-        a = get_rand(max_value)
-        b = get_rand(max_value)
+    retries = 0
+    while (a is None or (a * b > max_result if operator == 'x' else a + b > max_result) or str(max(a, b)) + operator + str(min(a, b)) in history) and retries < 10:
+        a = get_rand(max_value, _min)
+        b = get_rand(max_value, _min)
+        retries += 1
 
     return (a, b)
 
@@ -47,7 +50,11 @@ def f_addition():
     """ Generate an addition """
 
     r = get_rand(3)
-    a, b = get_equation_values(max_number_addition, max_result_addition)
+    a, b = get_equation_values(
+        max_number_addition, max_result_addition, '+')
+
+    # Add operation to history
+    history.append('%d+%d' % (max(a, b), min(a, b)))
 
     if r == 1:
         return ("%d + %d = ?" % (a, b))
@@ -61,7 +68,10 @@ def f_multiplication():
     """ Generate a multiplication """
 
     a, b = get_equation_values(
-        max_number_multiplication, max_result_multiplication, True)
+        max_number_multiplication, max_result_multiplication, 'x', 2)
+
+    # Add operation to history
+    history.append('%dx%d' % (max(a, b), min(a, b)))
 
     return ("%d x %d = ?" % (a, b))
 
@@ -70,17 +80,23 @@ def f_subtraction():
     """ Generate a subtraction """
 
     r = get_rand(3)
-    a, b = get_equation_values(max_number_subtraction, max_result_subtraction)
+    v1, v2 = get_equation_values(
+        max_number_subtraction, max_result_subtraction, '-')
+    a = max(v1, v2)  # Get greater number
+    b = min(v1, v2)  # Get smaller number
+
+    # Add operation to history
+    history.append('%d-%d' % (a, b))
 
     if r == 1:
-        return ("%d - %d = ?" % (a if a > b else b, a if a < b else b))
+        return ("%d - %d = ?" % (a, b))
     elif r == 2:
-        return ("%d - ? = %d" % (a + b, a if a > b else b))
+        return ("%d - ? = %d" % (a + b, a))
     else:
-        return ("? - %d = %d" % (a if a < b else b, a + b))
+        return ("? - %d = %d" % (b, a + b))
 
 
-options = {
+operation_types = {
     'addition': f_addition, 'multiplication': f_multiplication, 'subtraction': f_subtraction
 }
 
@@ -88,7 +104,7 @@ options = {
 def pick_operation_type():
     """ Chose a type of operation """
 
-    return random.choice(list(options.keys()))
+    return random.choice(list(operation_types.keys()))
 
 
 def pick_character():
@@ -104,7 +120,7 @@ def read_answer(equation):
     print()
     reply = input("Answer? ")
 
-    return reply.strip()
+    return reply.strip() or '0'
 
 
 def solve(equation, answer):
@@ -114,10 +130,13 @@ def solve(equation, answer):
     left = splitted[0].strip().replace('?', str(answer)).replace('x', '*')
     right = splitted[1].strip().replace('?', str(answer)).replace('x', '*')
 
-    if left.isdigit():
-        return int(left) == eval(right)
-    else:
-        return eval(left) == int(right)
+    try:
+        if right.isdigit():
+            return eval(left) == int(right)
+        else:
+            return int(left) == eval(right)
+    except ValueError:
+        return False
 
 
 def get_score():
@@ -132,6 +151,11 @@ def get_score():
     print('~' * 50)
 
 
+# Print instructions
+print('~' * 30)
+print(('~ Type q to quit').ljust(29, ' ') + '~')
+print('~' * 30)
+
 while True:
     # Questions counter
     total_questions += 1
@@ -144,7 +168,7 @@ while True:
     operation_type = pick_operation_type()
 
     # Generate a random equation
-    equation = options[operation_type]()
+    equation = operation_types[operation_type]()
 
     # Read user answer
     answer = read_answer(equation)
