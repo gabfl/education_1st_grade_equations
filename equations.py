@@ -26,10 +26,10 @@ characters = {
 }
 
 
-def get_rand(max=10, _min=1):
+def get_rand(_max=10, _min=1):
     """ Return random int """
 
-    return random.randint(_min, max)
+    return random.randint(_min, _max)
 
 
 def get_equation_values(max_value, max_result=20, operator='+', _min=1):
@@ -151,50 +151,56 @@ def get_score():
     print('~' * 50)
 
 
-# Print instructions
-print('~' * 30)
-print(('~ Type q to quit').ljust(29, ' ') + '~')
-print('~' * 30)
+def instructions():
+    """ Print instructions """
 
-while True:
-    # Questions counter
-    total_questions += 1
     print('~' * 30)
-    print(('~ Question %d' % total_questions).ljust(29, ' ') + '~')
+    print(('~ Type q to quit').ljust(29, ' ') + '~')
     print('~' * 30)
-    print()
 
-    # Pick a type of calculation
-    operation_type = pick_operation_type()
 
-    # Generate a random equation
-    equation = operation_types[operation_type]()
+if __name__ == '__main__':
+    instructions()
 
-    # Read user answer
-    answer = read_answer(equation)
+    while True:
+        # Questions counter
+        total_questions += 1
+        print('~' * 30)
+        print(('~ Question %d' % total_questions).ljust(29, ' ') + '~')
+        print('~' * 30)
+        print()
 
-    # Clear screen
-    os.system('clear')
+        # Pick a type of calculation
+        operation_type = pick_operation_type()
 
-    if answer.lower() == 'q':  # User quits
-        # Remove non-answered question from counter
-        total_questions -= 1
+        # Generate a random equation
+        equation = operation_types[operation_type]()
 
-        character = pick_character()
-        characters[character]('Goodbye')
-        get_score()
+        # Read user answer
+        answer = read_answer(equation)
 
-        sys.exit()
-        print('quit')
-    else:  # Check user answer
-        print('You replied: %s' % (answer))
-        is_correct = solve(equation, answer)
+        # Clear screen
+        os.system('clear')
 
-        if is_correct:  # Correct answer
+        if answer.lower() == 'q':  # User quits
+            # Remove non-answered question from counter
+            total_questions -= 1
+
             character = pick_character()
-            characters[character]('Good job!')
-            print()
-            total_points += 1
-        else:  # Wrong answer
-            print('Try again!')
-            print()
+            characters[character]('Goodbye')
+            get_score()
+
+            sys.exit()
+            print('quit')
+        else:  # Check user answer
+            print('You replied: %s' % (answer))
+            is_correct = solve(equation, answer)
+
+            if is_correct:  # Correct answer
+                character = pick_character()
+                characters[character]('Good job!')
+                print()
+                total_points += 1
+            else:  # Wrong answer
+                print('Try again!')
+                print()
